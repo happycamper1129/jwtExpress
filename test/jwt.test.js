@@ -131,6 +131,26 @@ describe('failure tests', function () {
   });
 
 
+  it('should throw error when signature is wrong', function() {
+      var secret = "shhh";
+      var token = jwt.sign({foo: 'bar', iss: 'http://www'}, secret);
+      // manipulate the token
+      var newContent = new Buffer("{foo: 'bar', edg: 'ar'}").toString('base64');
+      var splitetToken = token.split(".");
+      splitetToken[1] = newContent;
+      var newToken = splitetToken.join(".");
+
+      // build request
+      req.headers = [];
+      req.headers.authorization = 'Bearer ' + newToken;
+      expressjwt({secret: secret})(req,res, function(err) {
+          assert.ok(err);
+          assert.equal(err.code, 'invalid_token');
+          assert.equal(err.message, 'invalid signature');
+      });
+  });
+
+
 });
 
 describe('work tests', function () {
@@ -204,5 +224,54 @@ describe('work tests', function () {
       assert.equal('bar', req.user.foo);
     });
   });
+});
 
+describe('multitenant', function(){
+  var req = {};
+  var res = {};
+
+  var tenants = {
+    'a': {
+      secret: 'secret-a'
+    }
+  };
+
+  var secretCallback = function(req, payload, cb){
+    var issuer = payload.iss;
+    if (tenants[issuer]){
+      return cb(null, tenants[issuer].secret);
+    }
+
+    return cb(new UnauthorizedError('missing_secret',
+      { message: 'Could not find secret for issuer.' }));
+  };
+
+  var middleware = expressjwt({
+    secret: secretCallback
+  });
+
+  it ('should retrieve secret using callback', function(){
+    var token = jwt.sign({ iss: 'a', foo: 'bar'}, tenants.a.secret);
+
+    req.headers = {};
+    req.headers.authorization = 'Bearer ' + token;
+
+    middleware(req, res, function() {
+      assert.equal('bar', req.user.foo);
+    });
+  });
+
+  it ('should throw if an error ocurred when retrieving the token', function(){
+    var secret = 'shhhhhh';
+    var token = jwt.sign({ iss: 'inexistent', foo: 'bar'}, secret);
+
+    req.headers = {};
+    req.headers.authorization = 'Bearer ' + token;
+
+    middleware(req, res, function(err) {
+      assert.ok(err);
+      assert.equal(err.code, 'missing_secret');
+      assert.equal(err.message, 'Could not find secret for issuer.');
+    });
+  });
 });
