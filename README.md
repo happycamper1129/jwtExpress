@@ -47,9 +47,9 @@ Optionally you can make some paths unprotected as follows:
 app.use(jwt({ secret: 'shhhhhhared-secret'}).unless({path: ['/token']}));
 ```
 
-This is especially useful when applying to multiple routes.
+This is especially useful when applying to multiple routes. In the example above, `path` can be a string, a regexp, or an array of any of those.
 
-> If you need additional configuration options for the `.unless` syntax, please see [express-unless](https://github.com/jfromaniello/express-unless).
+> For more details on the `.unless` syntax including additional options, please see [express-unless](https://github.com/jfromaniello/express-unless).
 
 This module also support tokens signed with public/private key pairs. Instead of a secret, you can specify a Buffer with the public key
 
@@ -96,7 +96,7 @@ For example, if the secret varies based on the [JWT issuer](http://self-issued.i
 ```javascript
 var jwt = require('express-jwt');
 var data = require('./data');
-var utilities = requre('./utilities');
+var utilities = require('./utilities');
 
 var secretCallback = function(req, payload, done){
   var issuer = payload.iss;
@@ -130,7 +130,7 @@ For example, if the `(iss, jti)` claim pair is used to identify a JWT:
 ```javascript
 var jwt = require('express-jwt');
 var data = require('./data');
-var utilities = requre('./utilities');
+var utilities = require('./utilities');
 
 var isRevokedCallback = function(req, payload, done){
   var issuer = payload.iss;
