@@ -26,8 +26,8 @@ var jwt = require('express-jwt');
 app.get('/protected',
   jwt({secret: 'shhhhhhared-secret'}),
   function(req, res) {
-    if (!req.user.admin) return res.send(401);
-    res.send(200);
+    if (!req.user.admin) return res.sendStatus(401);
+    res.sendStatus(200);
   });
 ```
 
@@ -113,8 +113,8 @@ var secretCallback = function(req, payload, done){
 app.get('/protected',
   jwt({secret: secretCallback}),
   function(req, res) {
-    if (!req.user.admin) return res.send(401);
-    res.send(200);
+    if (!req.user.admin) return res.sendStatus(401);
+    res.sendStatus(200);
   });
 ```
 
@@ -124,7 +124,7 @@ It is possible that some tokens will need to be revoked so they cannot be used a
 * `payload` (`Object`) - An object with the JWT claims.
 * `done` (`Function`) - A function with signature `function(err, revoked)` to be invoked once the check to see if the token is revoked or not is complete.
   * `err` (`Any`) - The error that occurred.
-  * `secret` (`Boolean`) - `true` if the JWT is revoked, `false` otherwise.
+  * `revoked` (`Boolean`) - `true` if the JWT is revoked, `false` otherwise.
 
 For example, if the `(iss, jti)` claim pair is used to identify a JWT:
 ```javascript
@@ -146,8 +146,8 @@ app.get('/protected',
   jwt({secret: shhhhhhared-secret,
     isRevoked: isRevokedCallback}),
   function(req, res) {
-    if (!req.user.admin) return res.send(401);
-    res.send(200);
+    if (!req.user.admin) return res.sendStatus(401);
+    res.sendStatus(200);
   });
 ```
 
@@ -159,7 +159,7 @@ The default behavior is to throw an error when the token is invalid, so you can 
 ```javascript
 app.use(function (err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
-    res.send(401, 'invalid token...');
+    res.status(401).send('invalid token...');
   }
 });
 ```
